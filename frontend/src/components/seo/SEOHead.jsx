@@ -10,6 +10,25 @@ const DEFAULTS = {
   type: 'website',
 };
 
+/**
+ * SEOHead
+ *
+ *   A note on security headers:
+ *
+ *   You may be tempted to add <meta httpEquiv="X-Frame-Options" /> or
+ *   <meta httpEquiv="X-Content-Type-Options" /> here. Don't — browsers
+ *   ignore both when set via meta and Chrome explicitly warns about
+ *   X-Frame-Options. These must be sent as real HTTP response headers
+ *   from your hosting provider:
+ *
+ *     • Vercel    → vercel.json  (headers array)
+ *     • Netlify   → public/_headers
+ *     • Express   → app.use(helmet())
+ *     • Vite dev  → vite.config.js server.headers
+ *
+ *   The Referrer-Policy meta below IS respected by browsers — that one
+ *   stays.
+ */
 export default function SEOHead({
   title,
   description,
@@ -56,9 +75,7 @@ export default function SEOHead({
         </>
       )}
 
-      {/* Security Headers */}
-      <meta httpEquiv="X-Content-Type-Options" content="nosniff" />
-      <meta httpEquiv="X-Frame-Options" content="DENY" />
+      {/* Referrer policy — meta tag works for this one */}
       <meta name="referrer" content="strict-origin-when-cross-origin" />
     </Helmet>
   );

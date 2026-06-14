@@ -8,12 +8,14 @@ import AdminGate from './AdminGate.jsx';
 const Dashboard       = lazy(() => import('./Dashboard'));
 const Inventory       = lazy(() => import('./Inventory'));
 const OrderManagement = lazy(() => import('./OrderManagement'));
+const Customers       = lazy(() => import('./Customers'));
 const SubscriberList  = lazy(() => import('./SubscriberList'));
 
 const TAB_REGISTRY = {
   dashboard:   Dashboard,
   inventory:   Inventory,
   orders:      OrderManagement,
+  customers:   Customers,
   subscribers: SubscriberList,
 };
 

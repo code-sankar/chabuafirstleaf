@@ -1,154 +1,166 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { DollarSign, ShoppingBag, BarChart3, Users, ArrowUpRight, Loader } from 'lucide-react';
-import axios from 'axios';
-import env from '../../config/env';
+import {
+  DollarSign, ShoppingBag, Users, Loader, TrendingUp, CalendarDays, AlertCircle,
+} from 'lucide-react';
+
+import { getAnalytics } from '../../services/adminService';
+
+/**
+ * Dashboard — single-screen operational overview.
+ *
+ * Source: GET /api/orders/admin/analytics → {
+ *   totalRevenueUSD, monthlyRevenueUSD, ordersToday,
+ *   averageOrderValueUSD, totalCustomers, totalOrders
+ * }
+ *
+ * Previously this page used placeholder math (monthly = total*0.85,
+ * conversion = 4.8). With Phase 3b's controller the values are real.
+ */
 
 export default function Dashboard() {
   const [analytics, setAnalytics] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [errorText, setErrorText] = useState('');
+  const [error, setError] = useState('');
 
   useEffect(() => {
-    const controller = new AbortController();
-
-    const fetchMatrixData = async () => {
+    let cancelled = false;
+    (async () => {
       try {
-        const response = await axios.get(
-          `${env.API_BASE_URL}/api/orders/admin/analytics`,
-          { signal: controller.signal, timeout: 10000 }
-        );
-        if (response.data.success) {
-          setAnalytics(response.data.analytics);
-        }
+        const data = await getAnalytics();
+        if (!cancelled) setAnalytics(data?.analytics || null);
       } catch (err) {
-        if (!axios.isCancel(err)) {
-          setErrorText('Failed to connect to the analytics server. Please check your connection.');
+        if (!cancelled) {
+          setError(err?.message || 'Failed to connect to the analytics server. Please check your connection.');
         }
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
-    };
-
-    fetchMatrixData();
-    return () => controller.abort();
+    })();
+    return () => { cancelled = true; };
   }, []);
+
+  if (loading) {
+    return (
+      <div className="h-[60vh] flex items-center justify-center text-brand-muted">
+        <Loader className="w-6 h-6 animate-spin stroke-[1.5] mr-2" />
+        <span className="font-sans text-xs uppercase tracking-widest">Loading analytics…</span>
+      </div>
+    );
+  }
+
+  if (error || !analytics) {
+    return (
+      <div className="bg-white border border-red-200/60 p-8 text-center">
+        <AlertCircle className="w-6 h-6 text-red-500 mx-auto mb-3" strokeWidth={1.5} />
+        <p className="font-serif text-lg text-brand-forest mb-2">Could not load analytics</p>
+        <p className="font-sans text-sm text-brand-muted">
+          {error || 'No data returned. Are there any orders yet?'}
+        </p>
+      </div>
+    );
+  }
+
+  const cards = [
+    {
+      label: 'Total Revenue',
+      value: `$${Number(analytics.totalRevenueUSD || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+      sub: `${analytics.totalOrders || 0} captured orders`,
+      icon: DollarSign,
+    },
+    {
+      label: 'Monthly Revenue',
+      value: `$${Number(analytics.monthlyRevenueUSD || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+      sub: 'This calendar month',
+      icon: TrendingUp,
+    },
+    {
+      label: 'Orders Today',
+      value: String(analytics.ordersToday || 0),
+      sub: new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'short' }),
+      icon: CalendarDays,
+    },
+    {
+      label: 'Avg Order Value',
+      value: `$${Number(analytics.averageOrderValueUSD || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+      sub: 'Across all captured orders',
+      icon: ShoppingBag,
+    },
+    {
+      label: 'Total Customers',
+      value: String(analytics.totalCustomers || 0),
+      sub: 'Unique buyers',
+      icon: Users,
+    },
+    {
+      label: 'Total Orders',
+      value: String(analytics.totalOrders || 0),
+      sub: 'Lifetime',
+      icon: ShoppingBag,
+    },
+  ];
 
   const containerVariants = {
     hidden: { opacity: 0 },
-    visible: { opacity: 1, transition: { staggerChildren: 0.15 } },
+    visible: { opacity: 1, transition: { staggerChildren: 0.12 } },
   };
-
   const cardVariants = {
     hidden: { opacity: 0, y: 20 },
     visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: [0.215, 0.61, 0.355, 1] } },
   };
 
-  if (loading) {
-    return (
-      <div className="h-[60vh] w-full flex items-center justify-center text-brand-muted">
-        <Loader className="w-6 h-6 animate-spin stroke-[1.5] mr-2" />
-        <span className="font-sans text-xs uppercase tracking-widest">Loading Analytics…</span>
-      </div>
-    );
-  }
-
   return (
     <div className="space-y-10">
+      {/* Header */}
       <div className="border-b border-brand-charcoal/10 pb-6">
         <p className="font-sans text-xs tracking-widest uppercase text-brand-gold font-semibold mb-1">
           Operations Overview
         </p>
-        <h1 className="font-serif text-3xl text-brand-forest tracking-wide">
-          Dashboard
-        </h1>
+        <h1 className="font-serif text-3xl text-brand-forest tracking-wide">Dashboard</h1>
       </div>
 
-      {errorText && (
-        <div className="p-4 bg-red-50 text-red-700 font-sans text-xs border border-red-100" role="alert">
-          {errorText}
-        </div>
-      )}
-
+      {/* Metric grid */}
       <motion.div
-        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6"
         variants={containerVariants}
         initial="hidden"
         animate="visible"
+        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5"
       >
-        <motion.div variants={cardVariants} className="bg-white p-6 border border-brand-forest/5 shadow-sm space-y-4">
-          <div className="flex justify-between items-start">
-            <div className="p-3 bg-brand-cream border border-brand-gold/20 text-brand-gold">
-              <DollarSign className="w-4 h-4 stroke-[1.5]" />
-            </div>
-            <span className="text-[10px] font-sans text-emerald-600 bg-emerald-50 px-2 py-0.5 tracking-wider font-bold rounded-full flex items-center gap-0.5">
-              +14.2% <ArrowUpRight className="w-3 h-3" />
-            </span>
-          </div>
-          <div>
-            <p className="font-sans text-[10px] uppercase tracking-widest text-brand-muted font-bold">
-              Total Revenue
-            </p>
-            <h3 className="font-serif text-2xl text-brand-forest font-semibold mt-1">
-              ${analytics?.totalRevenueUSD?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-            </h3>
-          </div>
-        </motion.div>
-
-        <motion.div variants={cardVariants} className="bg-white p-6 border border-brand-forest/5 shadow-sm space-y-4">
-          <div className="flex justify-between items-start">
-            <div className="p-3 bg-brand-cream border border-brand-gold/20 text-brand-gold">
-              <ShoppingBag className="w-4 h-4 stroke-[1.5]" />
-            </div>
-            <span className="text-[10px] font-sans text-brand-gold bg-brand-cream px-2 py-0.5 tracking-wider font-bold rounded-full">
-              Active
-            </span>
-          </div>
-          <div>
-            <p className="font-sans text-[10px] uppercase tracking-widest text-brand-muted font-bold">
-              Orders Today
-            </p>
-            <h3 className="font-serif text-2xl text-brand-forest font-semibold mt-1">
-              {analytics?.ordersToday ?? 0}
-            </h3>
-          </div>
-        </motion.div>
-
-        <motion.div variants={cardVariants} className="bg-white p-6 border border-brand-forest/5 shadow-sm space-y-4">
-          <div className="flex justify-between items-start">
-            <div className="p-3 bg-brand-cream border border-brand-gold/20 text-brand-gold">
-              <BarChart3 className="w-4 h-4 stroke-[1.5]" />
-            </div>
-            <span className="text-[10px] font-sans text-emerald-600 bg-emerald-50 px-2 py-0.5 tracking-wider font-bold rounded-full">
-              Optimal
-            </span>
-          </div>
-          <div>
-            <p className="font-sans text-[10px] uppercase tracking-widest text-brand-muted font-bold">
-              Conversion Rate
-            </p>
-            <h3 className="font-serif text-2xl text-brand-forest font-semibold mt-1">
-              {analytics?.conversionRatePercent ?? 0}%
-            </h3>
-          </div>
-        </motion.div>
-
-        <motion.div variants={cardVariants} className="bg-white p-6 border border-brand-forest/5 shadow-sm space-y-4">
-          <div className="flex justify-between items-start">
-            <div className="p-3 bg-brand-cream border border-brand-gold/20 text-brand-gold">
-              <Users className="w-4 h-4 stroke-[1.5]" />
-            </div>
-          </div>
-          <div>
-            <p className="font-sans text-[10px] uppercase tracking-widest text-brand-muted font-bold">
-              Monthly Revenue
-            </p>
-            <h3 className="font-serif text-2xl text-brand-forest font-semibold mt-1">
-              ${analytics?.monthlyRevenueUSD?.toLocaleString(undefined, { maximumFractionDigits: 2 }) ?? '0.00'}
-            </h3>
-          </div>
-        </motion.div>
+        {cards.map((card) => {
+          const Icon = card.icon;
+          return (
+            <motion.div
+              key={card.label}
+              variants={cardVariants}
+              className="bg-white border border-brand-charcoal/5 p-6 hover:border-brand-gold/30 transition-colors"
+            >
+              <div className="flex items-center justify-between mb-4">
+                <p className="font-sans text-[10px] uppercase tracking-widest text-brand-muted font-semibold">
+                  {card.label}
+                </p>
+                <div className="w-9 h-9 border border-brand-gold/30 flex items-center justify-center">
+                  <Icon className="w-4 h-4 text-brand-gold" strokeWidth={1.5} />
+                </div>
+              </div>
+              <p className="font-serif text-3xl text-brand-forest tracking-wide tabular-nums">
+                {card.value}
+              </p>
+              <p className="font-sans text-[11px] text-brand-muted mt-2">
+                {card.sub}
+              </p>
+            </motion.div>
+          );
+        })}
       </motion.div>
+
+      {/* Helpful next-step hint */}
+      <div className="border-t border-brand-charcoal/10 pt-6">
+        <p className="font-sans text-[11px] text-brand-muted leading-relaxed max-w-2xl">
+          Cancelled and Refunded orders are excluded from revenue, order count, and AOV.
+          Use Order Logistics to update status or process refunds; the Patron Registry shows
+          per-customer lifetime value.
+        </p>
+      </div>
     </div>
   );
 }

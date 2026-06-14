@@ -11,7 +11,7 @@ import {
   adminRefundOrder,
   getAdminCustomersList,
 } from '../controllers/orders.controllers.js';
-import { requireAuth, optionalAuth } from '../middleware/auth.middleware.js';
+import { requireAuth, optionalAuth, requireAdmin } from '../middleware/auth.middleware.js';
 import { checkoutLimiter, trackLimiter } from '../middleware/rateLimit.middleware.js';
 
 const router = express.Router();
@@ -23,12 +23,19 @@ router.post('/checkout/verify', optionalAuth, verifySecurePaymentSettlement);
 /* ─── Guest order tracking (rate-limited) ──────────────────────── */
 router.post('/track', trackLimiter, trackOrder);
 
-/* ─── Admin — registered before '/:id' to avoid path collision ─── */
-router.get('/admin/list', getAdminOrdersList);
-router.get('/admin/analytics', fetchAdminAnalyticsMatrix);
-router.get('/admin/customers', getAdminCustomersList);
-router.patch('/admin/orders/:orderId/status', modifyOrderStatusByAdmin);
-router.post('/admin/orders/:orderId/refund', adminRefundOrder);
+/* ─── Admin sub-router — every route here requires an admin ────
+   Mounted before '/:id' to avoid path collision (/admin/list etc.
+   would otherwise be caught by the param route). */
+const adminRouter = express.Router();
+adminRouter.use(requireAdmin);
+
+adminRouter.get('/list', getAdminOrdersList);
+adminRouter.get('/analytics', fetchAdminAnalyticsMatrix);
+adminRouter.get('/customers', getAdminCustomersList);
+adminRouter.patch('/orders/:orderId/status', modifyOrderStatusByAdmin);
+adminRouter.post('/orders/:orderId/refund', adminRefundOrder);
+
+router.use('/admin', adminRouter);
 
 /* ─── Authenticated customer order history ──────────────────────── */
 router.get('/me', requireAuth, getMyOrders);

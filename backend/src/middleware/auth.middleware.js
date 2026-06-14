@@ -3,11 +3,14 @@ import { supabase } from '../config/supabase.js';
 /**
  * Auth middleware
  *
- * The frontend's `api.js` interceptor attaches the Supabase access token
- * as `Authorization: Bearer <token>` on every request when the customer
- * is signed in. Because our Supabase client here is initialized with the
- * SERVICE ROLE key, `supabase.auth.getUser(token)` can validate any
- * user's token and return their identity.
+ *   - requireAuth   : protected customer routes (orders, addresses)
+ *   - optionalAuth  : guest-friendly routes (checkout)
+ *   - requireAdmin  : admin-only routes (refunds, customers, status updates)
+ *
+ * All three pull the bearer token from Authorization, validate it via
+ * Supabase, and attach `req.user`. `requireAdmin` additionally checks
+ * the user's email against the ADMIN_EMAILS allow-list (comma-separated
+ * in your backend .env — mirrors the frontend's VITE_ADMIN_EMAILS).
  */
 
 function extractToken(req) {
@@ -18,9 +21,21 @@ function extractToken(req) {
 }
 
 /**
- * requireAuth — for routes that must have a signed-in customer.
- * Responds 401 if no valid token is present.
+ * Reads ADMIN_EMAILS from the environment and returns a lowercased Set.
+ * Computed fresh each call so reading the env at runtime always works,
+ * but cheap enough not to matter.
  */
+function getAdminEmailSet() {
+  const raw = process.env.ADMIN_EMAILS || '';
+  return new Set(
+    raw
+      .split(',')
+      .map((e) => e.trim().toLowerCase())
+      .filter(Boolean)
+  );
+}
+
+/* ─── requireAuth ───────────────────────────────────────────── */
 export async function requireAuth(req, res, next) {
   const token = extractToken(req);
 
@@ -38,11 +53,7 @@ export async function requireAuth(req, res, next) {
   next();
 }
 
-/**
- * optionalAuth — for routes that work for guests AND signed-in customers
- * (e.g. checkout). If a valid token is present, req.user is populated;
- * otherwise req.user is null and the request proceeds as a guest.
- */
+/* ─── optionalAuth ─────────────────────────────────────────── */
 export async function optionalAuth(req, res, next) {
   const token = extractToken(req);
 
@@ -53,5 +64,50 @@ export async function optionalAuth(req, res, next) {
 
   const { data } = await supabase.auth.getUser(token);
   req.user = data?.user || null;
+  next();
+}
+
+/* ─── requireAdmin ─────────────────────────────────────────── */
+/**
+ * Three checks, in order, with distinct status codes so the frontend
+ * can show the right message:
+ *
+ *   401 — no token / invalid token (sign in or session expired)
+ *   503 — ADMIN_EMAILS is not configured on the server (deploy issue)
+ *   403 — valid user, but not on the admin allow-list (insufficient privileges)
+ *
+ * The 503 vs 403 distinction matters operationally: a 503 means "fix
+ * your env"; a 403 means "this user isn't supposed to be here."
+ *
+ * TODO (future): when the team grows, swap the env-var allow-list for
+ * an `admin_users` table that supports roles (e.g. super_admin, ops,
+ * support). The middleware's interface stays the same.
+ */
+export async function requireAdmin(req, res, next) {
+  const token = extractToken(req);
+
+  if (!token) {
+    return res.status(401).json({ success: false, error: 'Authentication required. Please sign in.' });
+  }
+
+  const { data, error } = await supabase.auth.getUser(token);
+  if (error || !data?.user) {
+    return res.status(401).json({ success: false, error: 'Your session has expired. Please sign in again.' });
+  }
+
+  const adminSet = getAdminEmailSet();
+  if (adminSet.size === 0) {
+    console.error('[Auth] ADMIN_EMAILS is not configured — refusing all admin access.');
+    return res.status(503).json({ success: false, error: 'Admin gateway is not configured.' });
+  }
+
+  const userEmail = (data.user.email || '').toLowerCase();
+  if (!adminSet.has(userEmail)) {
+    console.warn(`[Auth] Non-admin user attempted admin access: ${userEmail || '<unknown>'}`);
+    return res.status(403).json({ success: false, error: 'You do not have admin privileges.' });
+  }
+
+  req.user = data.user;
+  req.isAdmin = true;
   next();
 }
