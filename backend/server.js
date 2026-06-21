@@ -5,6 +5,7 @@ import apiRouter from './src/routes/api.routes.js';
 import webhooksRouter from './src/routes/webhooks.routes.js';
 import { globalErrorHandler } from './src/middleware/error.middleware.js';
 import { initializeFxService } from './src/services/fx.service.js';
+import { generalLimiter } from './src/middleware/rateLimit.middleware.js';
 
 dotenv.config();
 
@@ -54,3 +55,5 @@ app.listen(PORT, () => {
   initializeFxService();
   console.log(`[Chabua Core Server]: Handshake active across secure link portal port:${PORT}`);
 });
+
+app.use('/api', generalLimiter, apiRouter); 

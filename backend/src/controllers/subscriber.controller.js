@@ -72,3 +72,17 @@ export const handleNewWaitlistSubscription = async (req, res, next) => {
     next(err);
   }
 };
+
+/* ─── GET /api/subscribers (admin) ─────────────────────────── */
+export const listSubscribers = async (req, res, next) => {
+  try {
+    const { data, error } = await supabase
+      .from('subscribers')
+      .select('id, name, email, created_at')
+      .order('created_at', { ascending: false });
+    if (error) throw error;
+    return res.status(200).json({ success: true, subscribers: data || [] });
+  } catch (err) {
+    next(err);
+  }
+};

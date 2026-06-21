@@ -1,9 +1,10 @@
 import express from 'express';
-import { handleNewWaitlistSubscription } from '../controllers/subscriber.controller.js';
+import { handleNewWaitlistSubscription, listSubscribers } from '../controllers/subscriber.controller.js';
+import { requireAdmin } from '../middleware/auth.middleware.js';
 
 const router = express.Router();
 
-// POST: /api/subscribers/subscribe
 router.post('/subscribe', handleNewWaitlistSubscription);
+router.get('/', requireAdmin, listSubscribers); // GET /api/subscribers (admin-only)
 
 export default router;

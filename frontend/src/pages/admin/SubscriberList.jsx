@@ -1,40 +1,39 @@
-import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { Search, Download, Mail, Loader, Trash2 } from 'lucide-react';
-import axios from 'axios';
+import React, { useState, useEffect } from "react";
+import { motion } from "framer-motion";
+import { Search, Download, Mail, Loader, Trash2 } from "lucide-react";
+import { listSubscribers } from "../../services/subscriberService";
 
-const MOCK_SUBSCRIBERS = [
-  { id: 1, name: "Alistair Pemberton", email: "a.pemberton@gmail.com", created_at: "2026-05-28T08:12:00Z" },
-  { id: 2, name: "Priya Nair", email: "priya.nair@email.com", created_at: "2026-05-29T11:44:00Z" },
-  { id: 3, name: "Jean-Luc Moreau", email: "jl.moreau@outlook.com", created_at: "2026-05-30T14:22:00Z" },
-  { id: 4, name: "Fatima Al-Rashid", email: "f.alrashid@icloud.com", created_at: "2026-06-01T09:05:00Z" },
-  { id: 5, name: "Marcus Webb", email: "m.webb@proton.me", created_at: "2026-06-02T16:30:00Z" },
-  { id: 6, name: "Ananya Krishnamurthy", email: "ananya.k@gmail.com", created_at: "2026-06-03T07:18:00Z" },
-  { id: 7, name: "Sebastian Clarke", email: "s.clarke@icloud.com", created_at: "2026-06-04T12:55:00Z" },
-];
+// const MOCK_SUBSCRIBERS = [
+//   { id: 1, name: "Alistair Pemberton", email: "a.pemberton@gmail.com", created_at: "2026-05-28T08:12:00Z" },
+//   { id: 2, name: "Priya Nair", email: "priya.nair@email.com", created_at: "2026-05-29T11:44:00Z" },
+//   { id: 3, name: "Jean-Luc Moreau", email: "jl.moreau@outlook.com", created_at: "2026-05-30T14:22:00Z" },
+//   { id: 4, name: "Fatima Al-Rashid", email: "f.alrashid@icloud.com", created_at: "2026-06-01T09:05:00Z" },
+//   { id: 5, name: "Marcus Webb", email: "m.webb@proton.me", created_at: "2026-06-02T16:30:00Z" },
+//   { id: 6, name: "Ananya Krishnamurthy", email: "ananya.k@gmail.com", created_at: "2026-06-03T07:18:00Z" },
+//   { id: 7, name: "Sebastian Clarke", email: "s.clarke@icloud.com", created_at: "2026-06-04T12:55:00Z" },
+// ];
 
 export default function SubscriberList() {
   const [subscribers, setSubscribers] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
   const [removingId, setRemovingId] = useState(null);
 
   useEffect(() => {
-    const fetch = async () => {
+    let cancelled = false;
+    (async () => {
       try {
-        const res = await axios.get('http://localhost:5000/api/subscribers');
-        if (res.data?.success && res.data.subscribers?.length) {
-          setSubscribers(res.data.subscribers);
-        } else {
-          setSubscribers(MOCK_SUBSCRIBERS);
-        }
+        const subs = await listSubscribers();
+        if (!cancelled) setSubscribers(subs);
       } catch {
-        setSubscribers(MOCK_SUBSCRIBERS);
+        if (!cancelled) setSubscribers([]); // show the empty state instead of mock data
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
+    })();
+    return () => {
+      cancelled = true;
     };
-    fetch();
   }, []);
 
   const handleRemove = async (id) => {
@@ -50,43 +49,48 @@ export default function SubscriberList() {
 
   const handleExportCSV = () => {
     const header = "Name,Email,Date Registered";
-    const rows = subscribers.map((s) =>
-      `"${s.name}","${s.email}","${new Date(s.created_at).toLocaleDateString('en-GB')}"`
+    const rows = subscribers.map(
+      (s) =>
+        `"${s.name}","${s.email}","${new Date(s.created_at).toLocaleDateString("en-GB")}"`,
     );
-    const csv = [header, ...rows].join('\n');
-    const blob = new Blob([csv], { type: 'text/csv' });
+    const csv = [header, ...rows].join("\n");
+    const blob = new Blob([csv], { type: "text/csv" });
     const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
+    const a = document.createElement("a");
     a.href = url;
-    a.download = `chabua-waitlist-${new Date().toISOString().split('T')[0]}.csv`;
+    a.download = `chabua-waitlist-${new Date().toISOString().split("T")[0]}.csv`;
     a.click();
     URL.revokeObjectURL(url);
   };
 
-  const filtered = subscribers.filter((s) =>
-    s.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    s.email?.toLowerCase().includes(searchQuery.toLowerCase())
+  const filtered = subscribers.filter(
+    (s) =>
+      s.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      s.email?.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
   if (loading) {
     return (
       <div className="h-[60vh] flex items-center justify-center text-brand-muted">
         <Loader className="w-5 h-5 animate-spin mr-2 stroke-[1.5]" />
-        <span className="font-sans text-xs uppercase tracking-widest">Accessing Waitlist Vault...</span>
+        <span className="font-sans text-xs uppercase tracking-widest">
+          Accessing Waitlist Vault...
+        </span>
       </div>
     );
   }
 
   return (
     <div className="space-y-8">
-
       {/* Header */}
       <div className="border-b border-brand-charcoal/10 pb-6 flex flex-col sm:flex-row sm:items-end justify-between gap-4">
         <div>
           <p className="font-sans text-xs tracking-widest uppercase text-brand-gold font-semibold mb-1">
             Private Allocation Registry
           </p>
-          <h1 className="font-serif text-3xl text-brand-forest tracking-wide">Waitlist Vault</h1>
+          <h1 className="font-serif text-3xl text-brand-forest tracking-wide">
+            Waitlist Vault
+          </h1>
         </div>
         <button
           onClick={handleExportCSV}
@@ -101,16 +105,26 @@ export default function SubscriberList() {
       <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
         {[
           { label: "Total Registrants", value: subscribers.length },
-          { label: "This Week", value: subscribers.filter((s) => {
-            const d = new Date(s.created_at);
-            const week = new Date(); week.setDate(week.getDate() - 7);
-            return d >= week;
-          }).length },
-          { label: "This Month", value: subscribers.filter((s) => {
-            const d = new Date(s.created_at);
-            const now = new Date();
-            return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
-          }).length },
+          {
+            label: "This Week",
+            value: subscribers.filter((s) => {
+              const d = new Date(s.created_at);
+              const week = new Date();
+              week.setDate(week.getDate() - 7);
+              return d >= week;
+            }).length,
+          },
+          {
+            label: "This Month",
+            value: subscribers.filter((s) => {
+              const d = new Date(s.created_at);
+              const now = new Date();
+              return (
+                d.getMonth() === now.getMonth() &&
+                d.getFullYear() === now.getFullYear()
+              );
+            }).length,
+          },
         ].map((stat, i) => (
           <motion.div
             key={i}
@@ -119,8 +133,12 @@ export default function SubscriberList() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: i * 0.08 }}
           >
-            <p className="font-sans text-[10px] uppercase tracking-widest text-brand-muted font-bold mb-1">{stat.label}</p>
-            <p className="font-serif text-2xl font-semibold text-brand-forest">{stat.value}</p>
+            <p className="font-sans text-[10px] uppercase tracking-widest text-brand-muted font-bold mb-1">
+              {stat.label}
+            </p>
+            <p className="font-serif text-2xl font-semibold text-brand-forest">
+              {stat.value}
+            </p>
           </motion.div>
         ))}
       </div>
@@ -143,7 +161,8 @@ export default function SubscriberList() {
           <div className="flex items-center gap-2">
             <Mail className="w-4 h-4 text-brand-gold stroke-[1.5]" />
             <h3 className="font-serif text-base text-brand-forest tracking-wide">
-              {filtered.length} Collector{filtered.length !== 1 ? 's' : ''} Registered
+              {filtered.length} Collector{filtered.length !== 1 ? "s" : ""}{" "}
+              Registered
             </h3>
           </div>
         </div>
@@ -151,8 +170,17 @@ export default function SubscriberList() {
           <table className="w-full">
             <thead>
               <tr className="border-b border-brand-charcoal/5 bg-brand-cream/30">
-                {["#", "Name", "Email Address", "Registration Date", "Action"].map((col) => (
-                  <th key={col} className="text-left px-6 py-3 font-sans text-[10px] uppercase tracking-widest text-brand-muted font-bold">
+                {[
+                  "#",
+                  "Name",
+                  "Email Address",
+                  "Registration Date",
+                  "Action",
+                ].map((col) => (
+                  <th
+                    key={col}
+                    className="text-left px-6 py-3 font-sans text-[10px] uppercase tracking-widest text-brand-muted font-bold"
+                  >
                     {col}
                   </th>
                 ))}
@@ -161,7 +189,10 @@ export default function SubscriberList() {
             <tbody>
               {filtered.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="px-6 py-16 text-center font-serif italic text-brand-muted">
+                  <td
+                    colSpan={5}
+                    className="px-6 py-16 text-center font-serif italic text-brand-muted"
+                  >
                     No subscribers match your search.
                   </td>
                 </tr>
@@ -175,18 +206,26 @@ export default function SubscriberList() {
                     transition={{ delay: i * 0.04 }}
                   >
                     <td className="px-6 py-4">
-                      <span className="font-sans text-xs text-brand-muted">{i + 1}</span>
+                      <span className="font-sans text-xs text-brand-muted">
+                        {i + 1}
+                      </span>
                     </td>
                     <td className="px-6 py-4">
-                      <span className="font-sans text-sm font-medium text-brand-charcoal">{sub.name}</span>
+                      <span className="font-sans text-sm font-medium text-brand-charcoal">
+                        {sub.name}
+                      </span>
                     </td>
                     <td className="px-6 py-4">
-                      <span className="font-sans text-sm text-brand-muted">{sub.email}</span>
+                      <span className="font-sans text-sm text-brand-muted">
+                        {sub.email}
+                      </span>
                     </td>
                     <td className="px-6 py-4">
                       <span className="font-sans text-xs text-brand-muted">
-                        {new Date(sub.created_at).toLocaleDateString('en-GB', {
-                          day: 'numeric', month: 'long', year: 'numeric'
+                        {new Date(sub.created_at).toLocaleDateString("en-GB", {
+                          day: "numeric",
+                          month: "long",
+                          year: "numeric",
                         })}
                       </span>
                     </td>

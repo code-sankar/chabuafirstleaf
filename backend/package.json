@@ -3,9 +3,10 @@
   "version": "1.0.0",
   "description": "\"Backend for my ChabuaFirstLeaf\"",
   "main": "server.js",
+  "type": "module",
   "scripts": {
-    "dev": "nodemon -r dotenv/config --experimental-json-modules src/server.js",
-    "start": "node src/server.js"
+    "dev": "nodemon -r dotenv/config --experimental-json-modules server.js",
+    "start": "node server.js"
   },
   "keywords": [
     "user authentication",

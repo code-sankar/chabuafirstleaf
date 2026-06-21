@@ -10,7 +10,7 @@ import {
   modifyOrderStatusByAdmin,
   adminRefundOrder,
   getAdminCustomersList,
-} from '../controllers/orders.controllers.js';
+} from '../controllers/orders.controller.js';
 import { requireAuth, optionalAuth, requireAdmin } from '../middleware/auth.middleware.js';
 import { checkoutLimiter, trackLimiter } from '../middleware/rateLimit.middleware.js';
 

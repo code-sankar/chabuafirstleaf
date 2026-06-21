@@ -14,6 +14,7 @@ import Cart from './components/common/Cart';
 import Footer from './components/common/Footer';
 import ScrollToTop from './components/common/ScrollToTop';
 import AuthGate from './components/common/AuthGate';
+import { useProductsInit } from './hooks/useProducts';
 
 /* ─── Public pages ───────────────────────────────────────────── */
 const Home          = lazy(() => import('./pages/main/Home'));
@@ -80,6 +81,7 @@ function Gated({ Component }) {
 
 export default function App() {
   useAuthInit();
+  useProductsInit();
   const isPreloaderDone = useSelector(selectPreloaderDone);
   const { pathname } = useLocation();
 

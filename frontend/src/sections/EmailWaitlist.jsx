@@ -1,11 +1,11 @@
-import React, { useState } from 'react';
-import { motion } from 'framer-motion';
-import { ArrowRight, Check, Loader } from 'lucide-react';
-import { supabase } from '../services/supabaseClient';
+import React, { useState } from "react";
+import { motion } from "framer-motion";
+import { ArrowRight, Check, Loader } from "lucide-react";
+import { subscribe } from "../services/subscriberService";
 
 export default function EmailWaitlist() {
-  const [formData, setFormData] = useState({ name: '', email: '' });
-  const [status, setStatus] = useState({ type: null, message: '' });
+  const [formData, setFormData] = useState({ name: "", email: "" });
+  const [status, setStatus] = useState({ type: null, message: "" });
   const [loading, setLoading] = useState(false);
 
   const handleSubscribe = async (e) => {
@@ -13,24 +13,21 @@ export default function EmailWaitlist() {
     if (!formData.name || !formData.email) return;
 
     setLoading(true);
-    setStatus({ type: null, message: '' });
+    setStatus({ type: null, message: "" });
 
     try {
-      const { error } = await supabase
-        .from('subscribers')
-        .insert([{ name: formData.name, email: formData.email }]);
-
-      if (error) {
-        if (error.code === '23505') {
-          throw new Error('This email has already been reserved for the early collection.');
-        }
-        throw error;
-      }
-
-      setStatus({ type: 'success', message: 'You have been added to our private list.' });
-      setFormData({ name: '', email: '' });
+      await subscribe({ name: formData.name, email: formData.email });
+      setStatus({
+        type: "success",
+        message: "You have been added to our private list.",
+      });
+      setFormData({ name: "", email: "" });
     } catch (err) {
-      setStatus({ type: 'error', message: err.message || 'An error occurred. Please try again.' });
+      // backend returns a friendly 409 message for duplicates
+      setStatus({
+        type: "error",
+        message: err.message || "An error occurred. Please try again.",
+      });
     } finally {
       setLoading(false);
     }
@@ -42,7 +39,6 @@ export default function EmailWaitlist() {
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-brand-gold/[0.03] rounded-full blur-3xl pointer-events-none" />
 
       <div className="max-w-2xl mx-auto text-center relative z-10">
-
         {/* Header */}
         <motion.div
           className="flex items-center justify-center gap-3 mb-6"
@@ -79,7 +75,7 @@ export default function EmailWaitlist() {
         </motion.p>
 
         {/* Form */}
-        {status.type === 'success' ? (
+        {status.type === "success" ? (
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -87,7 +83,9 @@ export default function EmailWaitlist() {
           >
             <div className="flex items-center justify-center gap-2 text-brand-gold">
               <Check className="w-5 h-5" strokeWidth={1.5} />
-              <span className="font-serif text-lg font-light tracking-wide">{status.message}</span>
+              <span className="font-serif text-lg font-light tracking-wide">
+                {status.message}
+              </span>
             </div>
             <p className="font-sans text-[11px] text-brand-cream/25 tracking-wide">
               We will be in touch before the next harvest window.
@@ -104,7 +102,9 @@ export default function EmailWaitlist() {
           >
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <label htmlFor="waitlist-name" className="sr-only">Full Name</label>
+                <label htmlFor="waitlist-name" className="sr-only">
+                  Full Name
+                </label>
                 <input
                   id="waitlist-name"
                   type="text"
@@ -112,12 +112,16 @@ export default function EmailWaitlist() {
                   required
                   autoComplete="name"
                   value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, name: e.target.value })
+                  }
                   className="w-full bg-brand-cream/[0.06] border border-brand-cream/8 px-5 py-4 font-sans text-sm text-brand-cream placeholder:text-brand-cream/20 focus:outline-none focus:border-brand-gold/30 transition-colors tracking-wide"
                 />
               </div>
               <div>
-                <label htmlFor="waitlist-email" className="sr-only">Email Address</label>
+                <label htmlFor="waitlist-email" className="sr-only">
+                  Email Address
+                </label>
                 <input
                   id="waitlist-email"
                   type="email"
@@ -125,7 +129,9 @@ export default function EmailWaitlist() {
                   required
                   autoComplete="email"
                   value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, email: e.target.value })
+                  }
                   className="w-full bg-brand-cream/[0.06] border border-brand-cream/8 px-5 py-4 font-sans text-sm text-brand-cream placeholder:text-brand-cream/20 focus:outline-none focus:border-brand-gold/30 transition-colors tracking-wide"
                 />
               </div>
@@ -146,8 +152,11 @@ export default function EmailWaitlist() {
               )}
             </button>
 
-            {status.type === 'error' && (
-              <p className="font-sans text-[11px] text-red-300/70 tracking-wide" role="alert">
+            {status.type === "error" && (
+              <p
+                className="font-sans text-[11px] text-red-300/70 tracking-wide"
+                role="alert"
+              >
                 {status.message}
               </p>
             )}
