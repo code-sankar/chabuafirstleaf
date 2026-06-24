@@ -4,11 +4,10 @@ import { ArrowUp } from 'lucide-react';
 
 const footerLinks = {
   collection: [
-    { label: 'Orthodox Gold', to: '/product/assam-orthodox-gold' },
-    { label: 'Clonal Imperial', to: '/product/chabua-clonal-imperial' },
-    { label: 'Tippy GFOP Reserve', to: '/product/tippy-gfop' },
-    { label: 'Smoked Souchong', to: '/product/heritage-smoked-souchong' },
-  ],
+  { label: 'Orthodox Gold', to: '/product/assam-orthodox-gold' },
+  { label: 'Clonal Imperial', to: '/product/chabua-clonal-imperial' },
+  { label: 'Tippy GFOP Reserve', to: '/product/tippy-gfop' },
+],
   house: [
     { label: 'Our Heritage', to: '/our-story' },
     { label: 'Estate Terroir', to: '/our-story' },

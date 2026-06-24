@@ -1,4 +1,6 @@
 import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { getJournalPostBySlug } from '../../services/journalService.js';
 import { useParams, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ArrowLeft, ChevronRight } from 'lucide-react';
@@ -107,7 +109,30 @@ const FALLBACK = {
 
 export default function JournalPost() {
   const { slug } = useParams();
-  const post = POSTS_CONTENT[slug] || FALLBACK;
+
+  // Start from the hardcoded seed so the page never renders empty.
+  const [post, setPost] = useState(POSTS_CONTENT[slug] || FALLBACK);
+
+  useEffect(() => {
+    // Reset to seed on slug change, then try to upgrade from the backend.
+    setPost(POSTS_CONTENT[slug] || FALLBACK);
+
+    let cancelled = false;
+    (async () => {
+      try {
+        const dbPost = await getJournalPostBySlug(slug);
+        // Only override if the DB row actually carries body content.
+        if (!cancelled && dbPost?.content?.length > 0) {
+          setPost(dbPost);
+        }
+      } catch {
+        /* keep the hardcoded seed / fallback */
+      }
+    })();
+
+    return () => { cancelled = true; };
+  }, [slug]);
+
 
   return (
     <div className="min-h-screen bg-brand-cream text-brand-charcoal pt-20">

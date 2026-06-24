@@ -57,3 +57,19 @@ app.listen(PORT, () => {
 });
 
 app.use('/api', generalLimiter, apiRouter); 
+
+/* ─── 404 fallback ─────────────────────────────────────────────── */
+app.use((req, res, next) => {
+  const error = new Error(`Resource pathway '${req.originalUrl}' inside our vintage reserves is undefined.`);
+  res.status(404);
+  next(error);
+});
+
+/* ─── Global error interceptor ─────────────────────────────────── */
+app.use(globalErrorHandler);
+
+/* ─── Boot ─────────────────────────────────────────────────────── */
+app.listen(PORT, () => {
+  initializeFxService();
+  console.log(`[Chabua Core Server]: Handshake active across secure link portal port:${PORT}`);
+});
