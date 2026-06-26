@@ -130,7 +130,9 @@ export const verifySecurePaymentSettlement = async (req, res, next) => {
     }
 
     if (paymentRow.status === 'captured' && paymentRow.order_id) {
-      // Already processed — return the existing order details (idempotent)
+      // Already processed — return the existing order details (idempotent).
+      // Returning here BEFORE the inventory decrement is important: it
+      // guarantees stock is never reduced twice for the same payment.
       const { data: existingOrder } = await supabase
         .from('orders')
         .select('order_number, id')
@@ -145,25 +147,25 @@ export const verifySecurePaymentSettlement = async (req, res, next) => {
       }
     }
 
-    // ── Inventory + item snapshots ──────────────────────────────
-    let itemRecordsPayload = [];
+    // ── Item snapshots ──────────────────────────────────────────
+    // Build the line-item records using SERVER-side product data so the
+    // recorded price/name/image cannot be tampered with by the client.
+    // Stock is NOT mutated here — it is decremented atomically below,
+    // after the order is persisted (see decrement_product_inventory).
+    const itemRecordsPayload = [];
 
     for (const item of items) {
       const { data: product } = await supabase
         .from('products')
-        .select('price, inventory_count, name, images, weight')
+        .select('price, name, images, weight')
         .eq('id', item.id)
         .single();
-
-      if (product) {
-        const updatedStock = Math.max(0, product.inventory_count - item.quantity);
-        await supabase.from('products').update({ inventory_count: updatedStock }).eq('id', item.id);
-      }
 
       itemRecordsPayload.push({
         product_id: item.id,
         quantity: item.quantity,
-        price_at_purchase: item.price,
+        // Trust the server price, fall back to client only if the row is gone.
+        price_at_purchase: product?.price ?? item.price,
         product_name: product?.name || item.name,
         product_image: product?.images?.[0] || item.images?.[0] || null,
         product_weight: product?.weight || item.weight || null,
@@ -210,6 +212,35 @@ export const verifySecurePaymentSettlement = async (req, res, next) => {
       .from('payments')
       .update({ razorpay_payment_id, razorpay_signature, status: 'captured', order_id: order.id })
       .eq('razorpay_order_id', razorpay_order_id);
+
+    // ── Decrement inventory atomically (oversell-safe) ─────────────
+    // The RPC locks each product row (SELECT ... FOR UPDATE), so two
+    // simultaneous checkouts of the last unit are serialized and cannot
+    // both succeed. Payment is already captured at this point, so a rare
+    // shortfall does NOT fail the order — it is logged and the order is
+    // flagged 'Processing' for an admin to reconcile.
+    try {
+      const { data: shortfalls, error: invErr } = await supabase.rpc(
+        'decrement_product_inventory',
+        { p_items: items.map((i) => ({ id: i.id, quantity: i.quantity })) }
+      );
+
+      if (invErr) {
+        console.error('[Inventory] Decrement RPC failed:', invErr.message);
+      } else if (Array.isArray(shortfalls) && shortfalls.length > 0) {
+        console.warn(
+          `[Inventory] Stock shortfall on paid order ${order.order_number}:`,
+          JSON.stringify(shortfalls)
+        );
+        await supabase
+          .from('orders')
+          .update({ status: 'Processing' })
+          .eq('id', order.id);
+      }
+    } catch (invCatch) {
+      // Never let an inventory hiccup break a paid order's response.
+      console.error('[Inventory] Unexpected decrement error:', invCatch.message);
+    }
 
     sendOrderConfirmationEmail(order, itemRecordsPayload).catch((err) =>
       console.error('[Email] Order confirmation failed:', err.message)
