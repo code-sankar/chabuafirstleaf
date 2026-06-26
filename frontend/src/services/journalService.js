@@ -9,6 +9,7 @@ function toUiPost(row) {
     title: row.title,
     excerpt: row.excerpt,
     date: row.date_label,
+    datePublished: row.published_at,   // ← add this
     image: row.image,
     featured: row.featured,
     subtitle: row.subtitle,
@@ -17,7 +18,6 @@ function toUiPost(row) {
     relatedSlugs: row.related_slugs || [],
   };
 }
-
 export async function listJournalPosts() {
   const { data } = await api.get('/api/journal');
   return (data.posts || []).map(toUiPost);

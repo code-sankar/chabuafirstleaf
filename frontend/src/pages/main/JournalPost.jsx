@@ -3,6 +3,8 @@ import { getJournalPostBySlug } from '../../services/journalService.js';
 import { useParams, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ArrowLeft, ChevronRight } from 'lucide-react';
+import SEOHead from '../../components/seo/SEOHead';
+import { ArticleStructuredData } from '../../components/seo/StructuredData';
 
 const POSTS_CONTENT = {
   "genesis-camellia-assamica": {
@@ -135,6 +137,14 @@ export default function JournalPost() {
 
   return (
     <div className="min-h-screen bg-brand-cream text-brand-charcoal pt-20">
+      <SEOHead
+        title={post.title}
+        description={(post.excerpt || post.subtitle || '').slice(0, 155)}
+        image={post.image}
+        path={`/journal/${slug}`}
+        type="article"
+      />
+      <ArticleStructuredData post={post} path={`/journal/${slug}`} />
 
       {/* Hero Image */}
       <motion.div

@@ -12,13 +12,15 @@ import {
   toggleWishlist,
   selectIsWishlisted,
 } from '../../store';
+import SEOHead from '../../components/seo/SEOHead';
+import { ProductStructuredData, BreadcrumbStructuredData } from '../../components/seo/StructuredData';
 
 export default function ProductDetail() {
   const { slug } = useParams();
   const dispatch = useDispatch();
   const { list } = useSelector((state) => state.collection);
 
-  const product = list.find((p) => p.slug === slug) || list[0];
+  const product = list.find((p) => p.slug === slug);
   const isWishlisted = useSelector(selectIsWishlisted(product?.id));
 
   const [activeImageIdx, setActiveImageIdx] = useState(0);
@@ -52,16 +54,48 @@ export default function ProductDetail() {
     dispatch(toggleWishlist(product));
   };
 
-  if (!product) {
+  // Catalogue still loading — neutral state, NOT a 404.
+  if (list.length === 0) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-brand-cream">
-        <p className="font-serif text-2xl text-brand-muted">Product not found.</p>
+        <p className="font-serif text-2xl text-brand-muted">Loading…</p>
       </div>
+    );
+  }
+
+  // Catalogue loaded but the slug matches nothing — a genuine 404.
+  if (!product) {
+    return (
+      <>
+        <SEOHead title="Product Not Found" noIndex path={`/product/${slug}`} />
+        <div className="min-h-screen flex flex-col items-center justify-center bg-brand-cream gap-6 px-6 text-center">
+          <p className="font-serif text-3xl text-brand-forest">This allocation could not be found.</p>
+          <Link to="/collection" className="font-sans text-xs uppercase tracking-widest text-brand-gold border-b border-brand-gold/40 pb-1">
+            Return to the Collection
+          </Link>
+        </div>
+      </>
     );
   }
 
   return (
     <div className="min-h-screen bg-brand-cream text-brand-charcoal pt-20">
+      <SEOHead
+        title={product.name}
+        description={(product.story || product.tagline || '').slice(0, 155)}
+        image={product.images?.[0]}
+        path={`/product/${product.slug}`}
+        type="product"
+        product={{ price: product.price, currency: product.currency }}
+      />
+      <ProductStructuredData product={product} />
+      <BreadcrumbStructuredData
+        items={[
+          { name: 'Home', path: '/' },
+          { name: 'Collection', path: '/collection' },
+          { name: product.name, path: `/product/${product.slug}` },
+        ]}
+      />
 
       {/* Breadcrumb */}
       <div className="max-w-7xl mx-auto px-6 md:px-12 lg:px-24 py-8 flex items-center gap-2 font-sans text-xs uppercase tracking-widest text-brand-muted">
