@@ -19,7 +19,10 @@ const ADMIN_EMAILS = (import.meta.env.VITE_ADMIN_EMAILS || '')
 
 function isAuthorizedAdmin(user) {
   if (!user?.email) return false;
-  if (ADMIN_EMAILS.length === 0) return true;
+  if (ADMIN_EMAILS.length === 0) {
+    // Fail CLOSED in prod, OPEN in dev.
+    return !import.meta.env.PROD;
+  }
   return ADMIN_EMAILS.includes(user.email.toLowerCase());
 }
 

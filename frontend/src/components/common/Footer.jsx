@@ -77,12 +77,16 @@ export default function Footer() {
 
         {/* Lower bar */}
         <div className="pt-8 flex flex-col lg:flex-row justify-between items-center gap-6">
-          <div className="flex items-center gap-4 text-[10px] font-sans tracking-editorial uppercase text-brand-cream/20">
+           <div className="flex items-center gap-4 text-[10px] font-sans tracking-editorial uppercase text-brand-cream/20">
             <span>© {new Date().getFullYear()} Chabua First Leaf</span>
             <span className="text-brand-cream/10">·</span>
             <Link to="/privacy" className="hover:text-brand-cream/40 transition-colors">Privacy</Link>
             <span className="text-brand-cream/10">·</span>
             <Link to="/terms" className="hover:text-brand-cream/40 transition-colors">Terms</Link>
+            <span className="text-brand-cream/10">·</span>
+            <Link to="/shipping" className="hover:text-brand-cream/40 transition-colors">Shipping</Link>
+            <span className="text-brand-cream/10">·</span>
+            <Link to="/returns" className="hover:text-brand-cream/40 transition-colors">Returns</Link>
           </div>
 
           <p className="text-[9px] font-sans tracking-editorial uppercase text-brand-gold/25 text-center">

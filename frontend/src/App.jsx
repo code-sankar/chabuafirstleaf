@@ -15,6 +15,7 @@ import Footer from './components/common/Footer';
 import ScrollToTop from './components/common/ScrollToTop';
 import AuthGate from './components/common/AuthGate';
 import { useProductsInit } from './hooks/useProducts';
+import CookieConsent from './components/CookieConsent';
 
 /* ─── Public pages ───────────────────────────────────────────── */
 const Home          = lazy(() => import('./pages/main/Home'));
@@ -41,6 +42,12 @@ const Orders       = lazy(() => import('./pages/account/Orders'));
 const OrderDetail  = lazy(() => import('./pages/account/OrderDetail'));
 const Addresses    = lazy(() => import('./pages/account/Addresses'));
 const Wishlist     = lazy(() => import('./pages/account/Wishlist'));
+
+/* ─── Legal & policy pages ─────────────────────────────────── */
+const PrivacyPolicy  = lazy(() => import('./pages/legal/PrivacyPolicy'));
+const TermsOfService = lazy(() => import('./pages/legal/TermsOfService'));
+const ShippingPolicy = lazy(() => import('./pages/legal/ShippingPolicy'));
+const ReturnsPolicy  = lazy(() => import('./pages/legal/ReturnsPolicy'));
 
 /* ─── Admin ────────────────────────────────────────────────── */
 const Admin = lazy(() => import('./pages/admin/Admin'));
@@ -106,6 +113,7 @@ export default function App() {
     <HelmetProvider>
       <SEOHead />
       <OrganizationStructuredData />
+      <CookieConsent/>
 
       {/* Preloader: public routes only */}
       {!isPreloaderDone && !isAdminRoute && !isBareRoute && <Preloader />}
@@ -164,6 +172,12 @@ export default function App() {
               <Route path="/account/orders/:id"     element={<Gated Component={OrderDetail} />} />
               <Route path="/account/addresses"      element={<Gated Component={Addresses} />} />
               <Route path="/account/wishlist"       element={<Gated Component={Wishlist} />} />
+
+              {/* Legal & policy */}
+              <Route path="/privacy"  element={<Lazy Component={PrivacyPolicy} />} />
+              <Route path="/terms"    element={<Lazy Component={TermsOfService} />} />
+              <Route path="/shipping" element={<Lazy Component={ShippingPolicy} />} />
+              <Route path="/returns"  element={<Lazy Component={ReturnsPolicy} />} />
 
               {/* Fallback */}
               <Route path="*" element={<Navigate to="/" replace />} />

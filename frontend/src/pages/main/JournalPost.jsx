@@ -1,4 +1,3 @@
-import React from 'react';
 import React, { useState, useEffect } from 'react';
 import { getJournalPostBySlug } from '../../services/journalService.js';
 import { useParams, Link } from 'react-router-dom';

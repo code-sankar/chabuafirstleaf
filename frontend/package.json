@@ -3,9 +3,12 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
-  "scripts": {
+ "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "prerender": "node scripts/prerender.js",
+    "build:seo": "vite build && node scripts/generate-sitemap.js && node scripts/prerender.js",
+    "sitemap": "node scripts/generate-sitemap.js",
     "lint": "eslint .",
     "preview": "vite preview"
   },
@@ -32,6 +35,7 @@
     "eslint-plugin-react-hooks": "^7.1.1",
     "eslint-plugin-react-refresh": "^0.5.2",
     "globals": "^17.6.0",
+    "puppeteer": "^25.2.1",
     "vite": "^8.0.12"
   }
 }
