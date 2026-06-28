@@ -119,22 +119,23 @@ export default function Navbar() {
     >
       <div className="max-w-7xl mx-auto px-6 md:px-12 h-20 md:h-24 flex items-center justify-between">
 
-        {/* Mobile menu trigger */}
-        <div className="flex-1 flex md:hidden justify-start">
-          <button
-            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            className="text-brand-cream/80 hover:text-brand-gold transition-colors"
-            aria-label={isMobileMenuOpen ? 'Close menu' : 'Open menu'}
-          >
-            {isMobileMenuOpen
-              ? <X className="w-5 h-5" strokeWidth={1} />
-              : <Menu className="w-5 h-5" strokeWidth={1} />}
-          </button>
-        </div>
+        {/* Brand mark — circular logo + wordmark (left) */}
+        <Link
+          to="/"
+          aria-label="Chabua First Leaf — home"
+          className="flex items-center gap-2.5 md:gap-3.5 text-brand-gold transition-opacity hover:opacity-80 shrink-0"
+        >
+          <CircularLogo className="h-12 md:h-14 w-auto shrink-0" />
+          <span className="font-serif text-base md:text-xl tracking-[0.2em] text-brand-cream whitespace-nowrap">
+            <span className="font-light">CHABUA</span>
+            <span className="hidden sm:inline text-brand-gold/40 mx-2 font-light">·</span>
+            <span className="hidden sm:inline font-light">FIRST LEAF</span>
+          </span>
+        </Link>
 
-        {/* Desktop nav — left side */}
-        <nav className="flex-1 hidden md:flex items-center gap-10 text-[11px] tracking-editorial uppercase text-brand-cream/60 font-sans font-light">
-          {navLinks.slice(0, 2).map((link) => (
+        {/* Desktop nav — centre/right */}
+        <nav className="hidden md:flex items-center gap-10 text-[11px] tracking-editorial uppercase text-brand-cream/60 font-sans font-light">
+          {navLinks.map((link) => (
             <a
               key={link.label}
               href={link.hash || link.to}
@@ -146,32 +147,8 @@ export default function Navbar() {
           ))}
         </nav>
 
-        {/* Brand mark */}
-        <div className="flex-1 flex justify-center">
-          <Link
-            to="/"
-            className="font-serif text-lg md:text-xl tracking-[0.2em] text-brand-cream whitespace-nowrap transition-opacity hover:opacity-80"
-          >
-            <span className="font-light">CHABUA</span>
-            <span className="hidden sm:inline text-brand-gold/40 mx-2 font-light">·</span>
-            <span className="hidden sm:inline font-light">FIRST LEAF</span>
-          </Link>
-        </div>
-
-        {/* Desktop nav — right side + icons */}
-        <div className="flex-1 flex items-center justify-end gap-6 md:gap-8">
-          <nav className="hidden md:flex items-center gap-10 text-[11px] tracking-editorial uppercase text-brand-cream/60 font-sans font-light">
-            {navLinks.slice(2).map((link) => (
-              <a
-                key={link.label}
-                href={link.hash || link.to}
-                onClick={(e) => handleNavClick(e, link)}
-                className="editorial-link hover:text-brand-cream transition-colors duration-300"
-              >
-                {link.label}
-              </a>
-            ))}
-          </nav>
+        {/* Right — account, cart, and mobile menu trigger */}
+        <div className="flex items-center gap-5 md:gap-8">
 
           {/* Account icon — opens dropdown if signed in, else navigates to /login */}
           <div className="relative" ref={accountRef}>
@@ -239,6 +216,17 @@ export default function Navbar() {
                 {cartCount}
               </motion.span>
             )}
+          </button>
+
+          {/* Mobile menu trigger */}
+          <button
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            className="md:hidden text-brand-cream/80 hover:text-brand-gold transition-colors"
+            aria-label={isMobileMenuOpen ? 'Close menu' : 'Open menu'}
+          >
+            {isMobileMenuOpen
+              ? <X className="w-5 h-5" strokeWidth={1} />
+              : <Menu className="w-5 h-5" strokeWidth={1} />}
           </button>
         </div>
       </div>
@@ -309,6 +297,53 @@ export default function Navbar() {
         )}
       </AnimatePresence>
     </motion.header>
+  );
+}
+
+/* Circular brand logo — inlined so the curved text uses the page's
+   Cormorant Garamond (loaded in index.html). Colour follows
+   `currentColor`, set via the text-brand-gold class on the parent Link. */
+function CircularLogo({ className }) {
+  return (
+    <svg viewBox="0 0 240 240" className={className} aria-hidden="true">
+      <defs>
+        <path id="cfl-ring-top" d="M38,120 A82,82 0 0 1 202,120" />
+        <path id="cfl-ring-bottom" d="M38,120 A82,82 0 0 0 202,120" />
+      </defs>
+
+      {/* rings + separators */}
+      <g fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="120" cy="120" r="104" />
+        <circle cx="120" cy="120" r="98" strokeWidth="1" />
+        <path d="M38,116.5 L41.5,120 L38,123.5 L34.5,120 Z" fill="currentColor" stroke="none" />
+        <path d="M202,116.5 L205.5,120 L202,123.5 L198.5,120 Z" fill="currentColor" stroke="none" />
+      </g>
+
+      {/* centred mark: two leaves and a bud */}
+      <g fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M120,74 C131,98 130,124 120,140 C110,124 109,98 120,74 Z" />
+        <path d="M120,82 L120,135" />
+        <g transform="translate(120,140) rotate(-112)">
+          <path d="M0,0 C13,-20 14,-44 0,-54 C-14,-44 -13,-20 0,0 Z" />
+          <path d="M0,-5 L0,-49" />
+        </g>
+        <g transform="translate(120,140) rotate(112)">
+          <path d="M0,0 C13,-20 14,-44 0,-54 C-14,-44 -13,-20 0,0 Z" />
+          <path d="M0,-5 L0,-49" />
+        </g>
+        <path d="M120,140 L120,156" />
+      </g>
+
+      {/* curved text */}
+      <g fill="currentColor" fontFamily="'Cormorant Garamond','Cormorant',Georgia,serif">
+        <text fontSize="15" fontWeight="600" letterSpacing="3" textAnchor="middle">
+          <textPath href="#cfl-ring-top" startOffset="50%">CHABUA FIRST LEAF</textPath>
+        </text>
+        <text fontSize="11" fontWeight="500" letterSpacing="2" textAnchor="middle">
+          <textPath href="#cfl-ring-bottom" startOffset="50%">WHERE INDIA’S TEA STORY BEGAN</textPath>
+        </text>
+      </g>
+    </svg>
   );
 }
 

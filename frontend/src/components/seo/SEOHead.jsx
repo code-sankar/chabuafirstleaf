@@ -6,7 +6,7 @@ const DEFAULTS = {
   title: 'Chabua First Leaf — Where India\'s Tea Story Began',
   description:
     'Luxury single-origin orthodox tea from the historic estates of Chabua, Assam. Hand-plucked, small-batch crafted, and refined for connoisseurs worldwide.',
-  image: `${env.SITE_URL}/og-image.jpg`,
+  image: `${env.SITE_URL}/og-image.png`,
   type: 'website',
 };
 
