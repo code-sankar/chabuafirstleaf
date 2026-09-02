@@ -15,6 +15,9 @@ function toUiProduct(row) {
     brewingNotes: row.brewing_notes || {},
     images: row.images || [],
     inventoryCount: row.inventory_count,
+    // Denormalised by the reviews trigger; absent until that migration runs.
+    ratingAverage: Number(row.rating_average) || 0,
+    ratingCount: Number(row.rating_count) || 0,
   };
 }
 

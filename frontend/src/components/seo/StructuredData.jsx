@@ -37,9 +37,9 @@ const websiteSchema = {
   },
 };
 
-function buildProductSchema(product) {
+function buildProductSchema(product, summary, reviews) {
   const inStock = (product.inventoryCount ?? 0) > 0;
-  return {
+  const schema = {
     "@context": "https://schema.org",
     "@type": "Product",
     name: product.name,
@@ -58,6 +58,36 @@ function buildProductSchema(product) {
       seller: { "@type": "Organization", name: "Chabua First Leaf" },
     },
   };
+
+  // Google rejects an aggregateRating with no ratings behind it, so both
+  // blocks are emitted only when real patron reviews exist.
+  if (summary?.count > 0) {
+    schema.aggregateRating = {
+      "@type": "AggregateRating",
+      ratingValue: summary.average,
+      reviewCount: summary.count,
+      bestRating: 5,
+      worstRating: 1,
+    };
+  }
+
+  if (reviews?.length > 0) {
+    schema.review = reviews.slice(0, 5).map((review) => ({
+      "@type": "Review",
+      reviewRating: {
+        "@type": "Rating",
+        ratingValue: review.rating,
+        bestRating: 5,
+        worstRating: 1,
+      },
+      author: { "@type": "Person", name: review.authorName },
+      datePublished: review.createdAt ? review.createdAt.slice(0, 10) : undefined,
+      name: review.title || undefined,
+      reviewBody: review.body,
+    }));
+  }
+
+  return schema;
 }
 
 export function OrganizationStructuredData() {
@@ -73,12 +103,12 @@ export function OrganizationStructuredData() {
   );
 }
 
-export function ProductStructuredData({ product }) {
+export function ProductStructuredData({ product, summary, reviews }) {
   if (!product) return null;
   return (
     <Helmet>
       <script type="application/ld+json">
-        {JSON.stringify(buildProductSchema(product))}
+        {JSON.stringify(buildProductSchema(product, summary, reviews))}
       </script>
     </Helmet>
   );

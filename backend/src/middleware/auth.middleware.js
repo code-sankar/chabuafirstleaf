@@ -35,6 +35,17 @@ function getAdminEmailSet() {
   );
 }
 
+/**
+ * True when the supplied email sits on the admin allow-list. Exported for
+ * routes that are open to any signed-in patron but grant admins extra
+ * reach — e.g. removing someone else's review.
+ */
+export function isAdminEmail(email) {
+  const adminSet = getAdminEmailSet();
+  if (adminSet.size === 0) return false;
+  return adminSet.has(String(email || '').toLowerCase());
+}
+
 /* ─── requireAuth ───────────────────────────────────────────── */
 export async function requireAuth(req, res, next) {
   const token = extractToken(req);

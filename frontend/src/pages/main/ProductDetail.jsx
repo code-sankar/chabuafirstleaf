@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -14,6 +14,8 @@ import {
 } from '../../store';
 import SEOHead from '../../components/seo/SEOHead';
 import { ProductStructuredData, BreadcrumbStructuredData } from '../../components/seo/StructuredData';
+import ProductReviews from '../../components/product/ProductReviews';
+import StarRating from '../../components/product/StarRating';
 
 export default function ProductDetail() {
   const { slug } = useParams();
@@ -27,6 +29,16 @@ export default function ProductDetail() {
   const [quantity, setQuantity] = useState(1);
   const [added, setAdded] = useState(false);
   const [zoomStyle, setZoomStyle] = useState({ display: 'none' });
+
+  /* Reported by the reviews section once it has loaded. Until then the
+     catalogue's denormalised aggregate carries the header rating. */
+  const [reviewData, setReviewData] = useState(null);
+  const handleSummaryChange = useCallback((data) => setReviewData(data), []);
+
+  const rating = useMemo(() => ({
+    average: reviewData?.summary.average ?? product?.ratingAverage ?? 0,
+    count: reviewData?.summary.count ?? product?.ratingCount ?? 0,
+  }), [reviewData, product]);
 
   const handleMouseMove = (e) => {
     if (window.innerWidth < 768) return;
@@ -88,7 +100,11 @@ export default function ProductDetail() {
         type="product"
         product={{ price: product.price, currency: product.currency }}
       />
-      <ProductStructuredData product={product} />
+      <ProductStructuredData
+        product={product}
+        summary={reviewData?.summary}
+        reviews={reviewData?.reviews}
+      />
       <BreadcrumbStructuredData
         items={[
           { name: 'Home', path: '/' },
@@ -176,6 +192,24 @@ export default function ProductDetail() {
               <p className="font-sans text-xs text-brand-muted mt-1">
                 {product.weight} · Single origin · Limited allocation
               </p>
+
+              {/* Rating summary — jumps to the impressions below */}
+              <a
+                href="#reviews"
+                className="inline-flex items-center gap-3 mt-4 group"
+                aria-label={
+                  rating.count > 0
+                    ? `Rated ${rating.average.toFixed(1)} out of 5 from ${rating.count} reviews. Read the reviews.`
+                    : 'Be the first to review this reserve.'
+                }
+              >
+                <StarRating value={rating.average} size="sm" />
+                <span className="font-sans text-[11px] tracking-wide text-brand-muted group-hover:text-brand-forest transition-colors">
+                  {rating.count > 0
+                    ? `${rating.average.toFixed(1)} · ${rating.count} ${rating.count === 1 ? 'review' : 'reviews'}`
+                    : 'Be the first to review'}
+                </span>
+              </a>
             </div>
 
             {/* Story */}
@@ -273,6 +307,14 @@ export default function ProductDetail() {
             </Link>
           </motion.div>
         </div>
+
+        {/* Ratings & Reviews */}
+        <ProductReviews
+          slug={product.slug}
+          productId={product.id}
+          productName={product.name}
+          onSummaryChange={handleSummaryChange}
+        />
 
         {/* Other Products */}
         <div className="mt-32 border-t border-brand-gold/10 pt-20">

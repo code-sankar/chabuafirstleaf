@@ -9,6 +9,7 @@ const Dashboard       = lazy(() => import('./Dashboard'));
 const Inventory       = lazy(() => import('./Inventory'));
 const OrderManagement = lazy(() => import('./OrderManagement'));
 const Customers       = lazy(() => import('./Customers'));
+const Reviews         = lazy(() => import('./Reviews'));
 const SubscriberList  = lazy(() => import('./SubscriberList'));
 
 const TAB_REGISTRY = {
@@ -16,6 +17,7 @@ const TAB_REGISTRY = {
   inventory:   Inventory,
   orders:      OrderManagement,
   customers:   Customers,
+  reviews:     Reviews,
   subscribers: SubscriberList,
 };
 

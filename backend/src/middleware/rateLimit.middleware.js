@@ -5,6 +5,7 @@ import rateLimit from 'express-rate-limit';
  *
  *   - checkoutLimiter: prevents order spam (and Razorpay quota burn)
  *   - trackLimiter: prevents order-number enumeration attacks
+ *   - reviewLimiter: prevents review spam
  *   - generalLimiter: a wide safety net for all other /api/* routes
  *
  * Limits are per IP. For production behind a reverse proxy, set
@@ -31,6 +32,17 @@ export const trackLimiter = rateLimit({
   message: {
     success: false,
     error: 'Too many tracking lookups. Please wait a few minutes before trying again.',
+  },
+});
+
+export const reviewLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1 hour
+  max: 10, // a patron writing more than ten reviews an hour is not a patron
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: {
+    success: false,
+    error: 'Too many review submissions from this address. Please try again later.',
   },
 });
 

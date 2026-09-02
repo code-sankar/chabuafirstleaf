@@ -5,6 +5,7 @@ import subscriberRouter from './subscribers.routes.js';
 import journalRouter from './journal.routes.js';
 import adminRouter from './admin.routes.js';
 import addressRouter from './addresses.routes.js'; // ← new (Phase 3)
+import reviewRouter from './reviews.routes.js';
 
 const router = express.Router();
 
@@ -15,6 +16,7 @@ router.use('/subscribers', subscriberRouter);
 router.use('/journal', journalRouter);
 router.use('/admin', adminRouter);
 router.use('/addresses', addressRouter); // ← new (Phase 3)
+router.use('/reviews', reviewRouter);
 
 // Base system diagnostics response for verification
 router.get('/health', (req, res) => {

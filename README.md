@@ -25,6 +25,7 @@ The platform serves primary markets in the **United Kingdom, United States, UAE,
 - [Repository Structure](#repository-structure)
 - [Prerequisites](#prerequisites)
 - [Getting Started](#getting-started)
+- [Database Migrations](#database-migrations)
 - [Environment Variables](#environment-variables)
 - [Scripts](#scripts)
 - [SEO & Prerendering](#seo--prerendering)
@@ -131,6 +132,22 @@ npm run dev
 
 The storefront runs on Vite's dev server (default `http://localhost:5173`) and proxies API calls to the Express backend.
 
+## Database Migrations
+
+The SQL in `backend/sql/` is applied by hand in the Supabase SQL editor. Every file is idempotent and safe to re-run, but they are order-dependent — later files assume the tables earlier ones create:
+
+| Order | File | Creates |
+|---|---|---|
+| 1 | `schema-base.sql` | `orders`, `order_items`, `payments` |
+| 2 | `schema.sql` | Phase 3 columns, `addresses`, `shipping_tracking`, order-number sequence |
+| 3 | `schema-3b.sql` | `refunds` |
+| 4 | `products.sql` | `products` catalogue + seed |
+| 5 | `journal.sql` | `journal_posts` + seed |
+| 6 | `inventory.sql` | `decrement_product_inventory` RPC |
+| 7 | `reviews.sql` | `product_reviews`, plus `products.rating_average` / `rating_count` and the trigger that maintains them |
+
+Until `reviews.sql` is applied, the storefront's ratings section renders its empty state rather than failing — but no impression can be recorded.
+
 ## Environment Variables
 
 Never commit secrets. Set these in `.env` locally, and in Railway, Cloudflare Pages, and GitHub Actions secrets for deployment.
@@ -193,7 +210,7 @@ Commerce integrity rests on four guarantees, all of which must remain intact:
 1. **HMAC payment verification** — Razorpay signatures are verified server-side before any order is fulfilled. The frontend is never trusted to confirm payment.
 2. **Atomic inventory** — stock is decremented through a `SELECT ... FOR UPDATE` Postgres RPC (`decrement_product_inventory`), not a read-modify-write, preventing oversell under concurrent checkout.
 3. **Idempotent webhooks** — Razorpay and Shiprocket webhooks are safe to retry; duplicate deliveries do not double-process orders.
-4. **Row-Level Security everywhere** — RLS is enabled on `orders`, `order_items`, `payments`, `subscribers`, `refunds`, and `shipping_tracking`. The `requireAdmin` middleware guards every admin route, and the admin gate fails closed in production. The lockdown policy lives in `backend/src/db/rls-lockdown.sql`.
+4. **Row-Level Security everywhere** — RLS is enabled on `orders`, `order_items`, `payments`, `subscribers`, `refunds`, and `shipping_tracking`. `products`, `journal_posts`, and `product_reviews` are publicly readable by policy (reviews only while published) and writable only through the service-role backend. The `requireAdmin` middleware guards every admin route, and the admin gate fails closed in production. The lockdown policy lives in `backend/src/db/rls-lockdown.sql`.
 
 ## Deployment
 
@@ -232,6 +249,7 @@ The experience is intentionally quiet. Luxury brands speak less: generous whites
 
 - [ ] Apply pending SEO wiring on `ProductDetail.jsx`, `JournalPost.jsx`, `NotFound.jsx`, and routing in `App.jsx`
 - [ ] Fill all legal pages — Privacy Policy, Terms of Service, Shipping Policy, Returns Policy
+- [ ] Apply every migration in `backend/sql/` in order — including `reviews.sql`, without which ratings cannot be recorded
 - [ ] Confirm RLS is enabled on all sensitive tables (`rls-lockdown.sql`)
 - [ ] Verify all environment variables on Railway, Cloudflare Pages, and GitHub secrets
 - [ ] Set the deploy build command to `npm run build:seo`

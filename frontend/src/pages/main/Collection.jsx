@@ -6,9 +6,11 @@ import { ArrowUpRight, ChevronRight } from 'lucide-react';
 import { selectProducts } from '../../store';
 import SEOHead from '../../components/seo/SEOHead';
 import { BreadcrumbStructuredData } from '../../components/seo/StructuredData';
+import StarRating from '../../components/product/StarRating';
 
 const SORT_OPTIONS = [
   { id: 'default',    label: "Curator's Order" },
+  { id: 'rating',     label: 'Most Admired' },
   { id: 'price-asc',  label: 'Price · Ascending' },
   { id: 'price-desc', label: 'Price · Descending' },
 ];
@@ -21,6 +23,14 @@ export default function Collection() {
     const list = [...products];
     if (sortBy === 'price-asc')  return list.sort((a, b) => a.price - b.price);
     if (sortBy === 'price-desc') return list.sort((a, b) => b.price - a.price);
+    if (sortBy === 'rating') {
+      // Unrated reserves fall to the bottom rather than tying at zero.
+      return list.sort(
+        (a, b) =>
+          (b.ratingAverage || 0) - (a.ratingAverage || 0) ||
+          (b.ratingCount || 0) - (a.ratingCount || 0)
+      );
+    }
     return list;
   }, [products, sortBy]);
 
@@ -202,6 +212,15 @@ function ProductCard({ product, index }) {
             <p className="font-serif italic text-brand-muted text-sm leading-relaxed">
               {product.tastingNotes.slice(0, 3).join(' · ')}
             </p>
+          )}
+
+          {product.ratingCount > 0 && (
+            <div className="flex items-center gap-2 pt-1">
+              <StarRating value={product.ratingAverage} size="xs" />
+              <span className="font-sans text-[10px] tracking-wider text-brand-muted/70 tabular-nums">
+                {product.ratingAverage.toFixed(1)} ({product.ratingCount})
+              </span>
+            </div>
           )}
 
           <div className="flex items-baseline justify-between pt-3">

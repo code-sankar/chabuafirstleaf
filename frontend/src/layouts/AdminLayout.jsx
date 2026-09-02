@@ -1,5 +1,5 @@
 import React from 'react';
-import { LayoutDashboard, Box, ClipboardList, Users, Mail, ShieldAlert } from 'lucide-react';
+import { LayoutDashboard, Box, ClipboardList, Users, Mail, ShieldAlert, Star } from 'lucide-react';
 
 export default function AdminLayout({ children, currentTab, setCurrentTab }) {
   const menuItems = [
@@ -7,6 +7,7 @@ export default function AdminLayout({ children, currentTab, setCurrentTab }) {
     { id: 'inventory',   label: 'Inventory Control', icon: Box },
     { id: 'orders',      label: 'Order Logistics',   icon: ClipboardList },
     { id: 'customers',   label: 'Patron Registry',   icon: Users },
+    { id: 'reviews',     label: 'Review Moderation', icon: Star },
     { id: 'subscribers', label: 'Waitlist Vault',    icon: Mail },
   ];
 
