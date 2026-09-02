@@ -5,10 +5,23 @@ import Heritage from '../../sections/Heritage.jsx';
 import Estate from '../../sections/Estate.jsx';
 import Craftsmanship from '../../sections/Craftsmanship.jsx';
 import EmailWaitlist from '../../sections/EmailWaitlist.jsx';
+import SEOHead from '../../components/seo/SEOHead';
+import { BreadcrumbStructuredData } from '../../components/seo/StructuredData';
 
 export default function OurStory() {
   return (
     <div className="min-h-screen bg-brand-cream text-brand-charcoal pt-20">
+      <SEOHead
+        title="Our Story"
+        description="From the 1823 Singpho groves to the first commercial garden of 1837 — the origin account of Chabua, the birthplace of India's tea industry, and the estate behind every tin we seal."
+        path="/our-story"
+      />
+      <BreadcrumbStructuredData
+        items={[
+          { name: 'Home',      path: '/' },
+          { name: 'Our Story', path: '/our-story' },
+        ]}
+      />
 
       {/* Hero Banner */}
       <section className="relative h-[60vh] flex items-end overflow-hidden bg-brand-charcoal">

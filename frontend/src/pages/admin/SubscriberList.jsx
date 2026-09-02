@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Search, Download, Mail, Loader, Trash2 } from "lucide-react";
-import { listSubscribers } from "../../services/subscriberService";
+import { Search, Download, Mail, Loader, Trash2, AlertCircle } from "lucide-react";
+import { listSubscribers, removeSubscriber } from "../../services/subscriberService";
 
 // const MOCK_SUBSCRIBERS = [
 //   { id: 1, name: "Alistair Pemberton", email: "a.pemberton@gmail.com", created_at: "2026-05-28T08:12:00Z" },
@@ -18,6 +18,7 @@ export default function SubscriberList() {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [removingId, setRemovingId] = useState(null);
+  const [removeError, setRemoveError] = useState("");
 
   useEffect(() => {
     let cancelled = false;
@@ -36,15 +37,24 @@ export default function SubscriberList() {
     };
   }, []);
 
+  useEffect(() => {
+    if (!removeError) return undefined;
+    const t = setTimeout(() => setRemoveError(""), 6000);
+    return () => clearTimeout(t);
+  }, [removeError]);
+
   const handleRemove = async (id) => {
     setRemovingId(id);
+    setRemoveError("");
     try {
-      await axios.delete(`http://localhost:5000/api/subscribers/${id}`);
-    } catch {
-      // Proceed with local removal
+      await removeSubscriber(id);
+      setSubscribers((prev) => prev.filter((s) => s.id !== id));
+    } catch (err) {
+      // The row is still on the server — say so rather than hiding it locally.
+      setRemoveError(err?.message || "That subscriber could not be removed.");
+    } finally {
+      setRemovingId(null);
     }
-    setSubscribers((prev) => prev.filter((s) => s.id !== id));
-    setRemovingId(null);
   };
 
   const handleExportCSV = () => {
@@ -100,6 +110,13 @@ export default function SubscriberList() {
           Export CSV
         </button>
       </div>
+
+      {removeError && (
+        <div className="flex items-start gap-2.5 p-3 bg-red-50 border border-red-200 text-red-700 font-sans text-xs">
+          <AlertCircle className="w-3.5 h-3.5 shrink-0 mt-0.5" strokeWidth={1.5} />
+          <span>{removeError}</span>
+        </div>
+      )}
 
       {/* Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">

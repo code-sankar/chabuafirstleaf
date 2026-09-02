@@ -86,3 +86,22 @@ export const listSubscribers = async (req, res, next) => {
     next(err);
   }
 };
+/* ─── DELETE /api/subscribers/:id (admin) ──────────────────── */
+export const removeSubscriber = async (req, res, next) => {
+  try {
+    const { data, error } = await supabase
+      .from('subscribers')
+      .delete()
+      .eq('id', req.params.id)
+      .select('id')
+      .maybeSingle();
+
+    if (error) throw error;
+    if (!data) {
+      return res.status(404).json({ success: false, error: 'Subscriber not found.' });
+    }
+    return res.status(200).json({ success: true, deleted: true });
+  } catch (err) {
+    next(err);
+  }
+};

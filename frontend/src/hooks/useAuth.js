@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { supabase } from '../services/supabaseClient';
-import { setUser, setLoading, selectUser, selectAuthLoading } from '../store';
+import { setUser, selectUser, selectAuthLoading } from '../store';
 
 /**
  * Single auth hook that syncs Supabase sessions into Redux.

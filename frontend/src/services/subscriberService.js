@@ -14,3 +14,7 @@ export async function listSubscribers() {
   const { data } = await api.get('/api/subscribers'); // admin-only
   return data.subscribers || [];
 }
+export async function removeSubscriber(id) {
+  const { data } = await api.delete(`/api/subscribers/${id}`); // admin-only
+  return data;
+}

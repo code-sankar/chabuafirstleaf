@@ -18,7 +18,7 @@ import env from '../../config/env';
 import CheckoutStepper from '../../components/checkout/CheckoutStepper';
 import CartReviewStep from '../../components/checkout/CartReviewStep';
 import ShippingStep from '../../components/checkout/ShippingStep';
-import ReviewStep, { computeBreakdown } from '../../components/checkout/ReviewStep';
+import ReviewStep from '../../components/checkout/ReviewStep';
 import PaymentStep from '../../components/checkout/PaymentStep';
 import ConfirmationStep from '../../components/checkout/ConfirmationStep';
 

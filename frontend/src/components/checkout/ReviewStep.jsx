@@ -130,8 +130,10 @@ export default function ReviewStep({ items, form, currency, onBack, onEditShippi
 
             <p className="font-sans text-[10px] text-brand-muted/60 tracking-wide text-center">
               By placing this order you agree to our{' '}
-              <a href="/terms" className="text-brand-forest underline">Terms</a> and{' '}
-              <a href="/privacy" className="text-brand-forest underline">Privacy Policy</a>.
+              {/* New tab: navigating away mid-checkout would drop the customer's
+                  progress through the stepper. */}
+              <a href="/terms" target="_blank" rel="noopener noreferrer" className="text-brand-forest underline">Terms</a> and{' '}
+              <a href="/privacy" target="_blank" rel="noopener noreferrer" className="text-brand-forest underline">Privacy Policy</a>.
             </p>
           </div>
         </aside>

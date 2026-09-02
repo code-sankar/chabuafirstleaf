@@ -95,44 +95,66 @@ const POSTS_CONTENT = {
   }
 };
 
-const FALLBACK = {
-  tag: "Estate Chronicles",
-  date: "2026",
-  readTime: "6 min read",
-  title: "From the Estate",
-  subtitle: "Notes from the gardens of Chabua.",
-  image: "https://images.unsplash.com/photo-1546842931-886c185b4c8c?auto=format&fit=crop&q=80&w=1800",
-  content: [
-    { type: "paragraph", text: "This entry is being prepared by our editorial team. Please return soon for the full account." }
-  ],
-  relatedSlugs: []
-};
-
 export default function JournalPost() {
   const { slug } = useParams();
 
-  // Start from the hardcoded seed so the page never renders empty.
-  const [post, setPost] = useState(POSTS_CONTENT[slug] || FALLBACK);
+  /* A slug with a hardcoded seed renders instantly and is then upgraded from
+     the backend. A slug with no seed has to wait for the lookup — and when
+     that finds nothing it is a genuine 404, not an article to invent. */
+  const seed = POSTS_CONTENT[slug] || null;
+  const [post, setPost] = useState(seed);
+  const [status, setStatus] = useState(seed ? 'ready' : 'loading');
 
   useEffect(() => {
-    // Reset to seed on slug change, then try to upgrade from the backend.
-    setPost(POSTS_CONTENT[slug] || FALLBACK);
+    const nextSeed = POSTS_CONTENT[slug] || null;
+    setPost(nextSeed);
+    setStatus(nextSeed ? 'ready' : 'loading');
 
     let cancelled = false;
     (async () => {
       try {
         const dbPost = await getJournalPostBySlug(slug);
+        if (cancelled) return;
         // Only override if the DB row actually carries body content.
-        if (!cancelled && dbPost?.content?.length > 0) {
+        if (dbPost?.content?.length > 0) {
           setPost(dbPost);
+          setStatus('ready');
+        } else if (!nextSeed) {
+          setStatus('missing');
         }
       } catch {
-        /* keep the hardcoded seed / fallback */
+        // Keep the hardcoded seed when there is one; otherwise this slug
+        // does not resolve to an entry at all.
+        if (!cancelled && !nextSeed) setStatus('missing');
       }
     })();
 
     return () => { cancelled = true; };
   }, [slug]);
+
+  // Lookup still in flight — neutral state, NOT a 404.
+  if (status === 'loading') {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-brand-cream">
+        <p className="font-serif text-2xl text-brand-muted">Loading…</p>
+      </div>
+    );
+  }
+
+  // The slug matches no entry — a genuine 404, kept out of the index.
+  if (status === 'missing' || !post) {
+    return (
+      <>
+        <SEOHead title="Journal Entry Not Found" noIndex path={`/journal/${slug}`} />
+        <div className="min-h-screen flex flex-col items-center justify-center bg-brand-cream gap-6 px-6 text-center">
+          <p className="font-serif text-3xl text-brand-forest">This entry could not be found.</p>
+          <Link to="/journal" className="font-sans text-xs uppercase tracking-widest text-brand-gold border-b border-brand-gold/40 pb-1">
+            Return to the Journal
+          </Link>
+        </div>
+      </>
+    );
+  }
 
 
   return (

@@ -4,9 +4,9 @@ import api from './api.js';
  * Admin service — single surface for all /admin/* endpoints.
  *
  *   Uses the shared `api` axios instance, so the Supabase access token
- *   is automatically attached. The backend admin routes don't currently
- *   enforce token-based gating (the AdminGate page-level check guards
- *   access), but every call here is auth-ready for the day that lands.
+ *   is automatically attached. The backend gates every one of these routes
+ *   with `requireAdmin` (token + ADMIN_EMAILS allow-list); the AdminGate
+ *   page-level check is only the cosmetic half of that.
  */
 
 /* ─── Orders ─────────────────────────────────────────────────── */

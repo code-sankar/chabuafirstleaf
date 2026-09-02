@@ -1,5 +1,6 @@
 import React, { lazy, Suspense } from 'react';
 import Hero from '../../sections/Hero';
+import SEOHead from '../../components/seo/SEOHead';
 import SectionDivider from '../../components/ui/SectionDivider';
 import WaveTransition from '../../components/ui/WaveTransition';
 
@@ -25,6 +26,8 @@ function SectionFallback() {
 export default function Home() {
   return (
     <>
+      <SEOHead path="/" />
+
       <Hero />
 
       <Suspense fallback={<SectionFallback />}>

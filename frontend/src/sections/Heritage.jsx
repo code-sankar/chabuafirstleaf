@@ -97,7 +97,7 @@ export default function Heritage() {
 
           {/* RIGHT: Asymmetrical Chronological Text Timeline */}
           <div className="lg:col-span-7 space-y-24 md:space-y-36 lg:pl-12">
-            {timelineMilestones.map((milestone, idx) => (
+            {timelineMilestones.map((milestone) => (
               <motion.div 
                 key={milestone.year}
                 className="relative border-l border-brand-gold/30 pl-8 md:pl-12 group"

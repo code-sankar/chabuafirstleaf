@@ -6,7 +6,6 @@ import { HelmetProvider } from "react-helmet-async";
 import { useAuthInit } from "./hooks/useAuth";
 import { selectPreloaderDone } from "./store";
 
-import SEOHead from "./components/seo/SEOHead";
 import { OrganizationStructuredData } from "./components/seo/StructuredData";
 import Preloader from "./components/common/Preloader";
 import Navbar from "./components/common/Navbar";
@@ -113,7 +112,10 @@ export default function App() {
 
   return (
     <HelmetProvider>
-      <SEOHead />
+      {/* No site-wide <SEOHead> here: react-helmet accumulates <link> and
+          <meta> tags rather than replacing them, so a default instance
+          emitted a second canonical (pointing at "/") ahead of each page's
+          own. Every route supplies its own SEOHead instead. */}
       <OrganizationStructuredData />
       <CookieConsent />
 

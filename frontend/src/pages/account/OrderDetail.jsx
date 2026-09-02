@@ -82,7 +82,9 @@ export default function OrderDetail() {
   return (
     <>
       <Helmet>
-        <title>Order {order.orderNumber} · Chabua First Leaf</title>
+        {/* One interpolated string: react-helmet drops a title built from
+            multiple children, which left this tab with no title at all. */}
+        <title>{`Order ${order.orderNumber} · Chabua First Leaf`}</title>
         <meta name="robots" content="noindex" />
       </Helmet>
 

@@ -17,5 +17,11 @@ export default defineConfig([
       globals: globals.browser,
       parserOptions: { ecmaFeatures: { jsx: true } },
     },
+    rules: {
+      // Vite's React plugin uses the automatic JSX runtime, so the `React`
+      // import every file carries is genuinely unused. Without this the lint
+      // run drowns in ~84 of those and real findings go unread.
+      'no-unused-vars': ['error', { varsIgnorePattern: '^[A-Z_]' }],
+    },
   },
 ])

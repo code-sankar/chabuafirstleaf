@@ -185,7 +185,7 @@ export default function Navbar() {
                   <nav className="py-2">
                     <DropdownItem to="/account" icon={User} label="Account" />
                     <DropdownItem to="/account/orders" icon={Package} label="Orders" />
-                    <DropdownItem to="/account/wishlist" icon={Heart} label="Wishlist" />
+                    <DropdownItem to="/account/wishlist" icon={Heart} label="Wishlist" count={wishlistCount} />
                   </nav>
 
                   <button
@@ -347,7 +347,7 @@ function CircularLogo({ className }) {
   );
 }
 
-function DropdownItem({ to, icon: Icon, label }) {
+function DropdownItem({ to, icon: Icon, label, count }) {
   return (
     <Link
       to={to}
@@ -355,6 +355,9 @@ function DropdownItem({ to, icon: Icon, label }) {
     >
       <Icon className="w-3.5 h-3.5 stroke-[1.5]" />
       <span>{label}</span>
+      {count > 0 && (
+        <span className="ml-auto font-sans text-[10px] tabular-nums text-brand-gold">{count}</span>
+      )}
     </Link>
   );
 }

@@ -22,16 +22,6 @@ export default function OrderTracking() {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
 
-  /* If the URL has both order and email, auto-look-up (rare but possible) */
-  useEffect(() => {
-    const emailParam = searchParams.get('email');
-    if (initialOrder && emailParam) {
-      setForm({ orderNumber: initialOrder, email: emailParam });
-      handleLookup({ orderNumber: initialOrder, email: emailParam });
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
   const handleLookup = async (override) => {
     const payload = override || form;
     setError('');
@@ -54,6 +44,16 @@ export default function OrderTracking() {
       setLoading(false);
     }
   };
+
+  /* If the URL has both order and email, auto-look-up (rare but possible) */
+  useEffect(() => {
+    const emailParam = searchParams.get('email');
+    if (initialOrder && emailParam) {
+      setForm({ orderNumber: initialOrder, email: emailParam });
+      handleLookup({ orderNumber: initialOrder, email: emailParam });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleSubmit = (e) => {
     e.preventDefault();

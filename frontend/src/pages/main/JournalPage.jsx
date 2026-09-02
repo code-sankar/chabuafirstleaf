@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { ArrowUpRight } from 'lucide-react';
+import SEOHead from '../../components/seo/SEOHead';
+import { BreadcrumbStructuredData } from '../../components/seo/StructuredData';
 
 const ALL_POSTS = [
   {
@@ -80,6 +82,17 @@ export default function JournalPage() {
 
   return (
     <div className="min-h-screen bg-brand-cream text-brand-charcoal pt-20">
+      <SEOHead
+        title="The Journal"
+        description="Heritage accounts, technical rituals, and estate chronicles from Chabua — the origins of Assam orthodox tea, the chemistry of the cup, and the craft behind each harvest."
+        path="/journal"
+      />
+      <BreadcrumbStructuredData
+        items={[
+          { name: 'Home',    path: '/' },
+          { name: 'Journal', path: '/journal' },
+        ]}
+      />
 
       {/* Page Header */}
       <section className="max-w-7xl mx-auto px-6 md:px-12 lg:px-24 pt-16 pb-12 border-b border-brand-gold/10">

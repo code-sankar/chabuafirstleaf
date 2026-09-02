@@ -144,7 +144,8 @@ The SQL in `backend/sql/` is applied by hand in the Supabase SQL editor. Every f
 | 4 | `products.sql` | `products` catalogue + seed |
 | 5 | `journal.sql` | `journal_posts` + seed |
 | 6 | `inventory.sql` | `decrement_product_inventory` RPC |
-| 7 | `reviews.sql` | `product_reviews`, plus `products.rating_average` / `rating_count` and the trigger that maintains them |
+| 7 | `subscribers.sql` | `subscribers` (waitlist) |
+| 8 | `reviews.sql` | `product_reviews`, plus `products.rating_average` / `rating_count` and the trigger that maintains them |
 
 Until `reviews.sql` is applied, the storefront's ratings section renders its empty state rather than failing — but no impression can be recorded.
 
@@ -152,20 +153,23 @@ Until `reviews.sql` is applied, the storefront's ratings section renders its emp
 
 Never commit secrets. Set these in `.env` locally, and in Railway, Cloudflare Pages, and GitHub Actions secrets for deployment.
 
-**Storefront** (`.env`, exposed to the browser — public keys only):
+**Storefront** (`frontend/.env`, exposed to the browser — public keys only):
 
 ```
-VITE_SUPABASE_URL=https://<project>.supabase.co
-VITE_SUPABASE_PUBLISHABLE_KEY=sb_publishable_...
 VITE_API_BASE_URL=https://<railway-app>.up.railway.app
-VITE_RAZORPAY_KEY_ID=rzp_live_...
+VITE_SUPABASE_URL=https://<project>.supabase.co
+VITE_SUPABASE_ANON_KEY=sb_publishable_...
+VITE_RAZORPAY_KEY=rzp_live_...
+VITE_SITE_URL=https://chabuafirstleaf.com
+VITE_ADMIN_EMAILS=founder@chabuafirstleaf.com
 ```
 
 **Commerce API** (`backend/.env`, server-side secrets):
 
 ```
 SUPABASE_URL=https://<project>.supabase.co     # base domain only, no trailing slash or path
-SUPABASE_SECRET_KEY=sb_secret_...
+SUPABASE_SERVICE_ROLE_KEY=sb_secret_...
+ADMIN_EMAILS=founder@chabuafirstleaf.com       # required — admin routes 503 without it
 RAZORPAY_KEY_ID=rzp_live_...
 RAZORPAY_KEY_SECRET=...
 RAZORPAY_WEBHOOK_SECRET=...
@@ -174,6 +178,8 @@ SHIPROCKET_PASSWORD=...
 RESEND_API_KEY=re_...
 FRONTEND_URL=https://chabuafirstleaf.com
 ```
+
+Both apps ship a complete `.env.example` — copy those rather than this excerpt, and keep the two admin allow-lists in step.
 
 > The `sb_publishable_` key ships in the frontend bundle by design — which is exactly why Row-Level Security is mandatory on every sensitive table. See [Security Model](#security-model).
 

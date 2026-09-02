@@ -30,13 +30,6 @@ export default function Testimonials() {
   const [index, setIndex] = useState(0);
   const [direction, setDirection] = useState(0);
 
-  useEffect(() => {
-    const timer = setInterval(() => {
-      handleNext();
-    }, 9000);
-    return () => clearInterval(timer);
-  }, [index]);
-
   const handlePrev = () => {
     setDirection(-1);
     setIndex((prev) => (prev === 0 ? premiumReviews.length - 1 : prev - 1));
@@ -46,6 +39,14 @@ export default function Testimonials() {
     setDirection(1);
     setIndex((prev) => (prev === premiumReviews.length - 1 ? 0 : prev + 1));
   };
+
+  /* Auto-advance, restarting whenever the slide changes so a manual
+     navigation gets a full dwell. The handlers above are declared first so
+     the interval never closes over a binding that is not yet initialised. */
+  useEffect(() => {
+    const timer = setInterval(handleNext, 9000);
+    return () => clearInterval(timer);
+  }, [index]);
 
   const slideVariants = {
     enter: (dir) => ({
